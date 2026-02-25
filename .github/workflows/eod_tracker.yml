@@ -1,0 +1,97 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# .github/workflows/eod_tracker.yml
+# Dhruv — Daily End-of-Day Portfolio Tracker
+# ─────────────────────────────────────────────────────────────────────────────
+# Runs every weekday at 4:30 PM IST (11:00 UTC) — 1hr after NSE closes
+# Fetches closing prices → calculates P&L → appends to portfolio_history.csv
+# → commits CSV back to repo automatically
+#
+# One-time setup:
+#   1. Repo → Settings → Actions → General → "Read and write permissions" ✅
+#   2. Run --init once (manually trigger with mode: init)
+#   3. Done — runs automatically every weekday
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: ⭐ Dhruv · Daily EOD Tracker
+
+on:
+  schedule:
+    - cron: "0 11 * * 1-5"    # 4:30 PM IST (primary)
+    - cron: "30 11 * * 1-5"   # 5:00 PM IST (safety retry)
+
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Mode"
+        required: true
+        default: "eod"
+        type: choice
+        options:
+          - eod      # fetch EOD prices and append to CSV
+          - init     # initialise positions from screener cache (first time)
+          - report   # print P&L report in logs
+          - stocks   # list current positions
+      top_n:
+        description: "Top N stocks (for init mode)"
+        required: false
+        default: "10"
+
+jobs:
+  track:
+    name: Fetch EOD prices & update CSV
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 🐍 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 📦 Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: ⭐ Run EOD tracker
+        run: |
+          MODE="${{ github.event.inputs.mode || 'eod' }}"
+          TOP="${{ github.event.inputs.top_n || '10' }}"
+          echo "Mode: $MODE  |  Top N: $TOP"
+          case "$MODE" in
+            init)   python eod_tracker.py --init --top "$TOP" ;;
+            report) python eod_tracker.py --report ;;
+            stocks) python eod_tracker.py --stocks ;;
+            *)      python eod_tracker.py ;;
+          esac
+
+      - name: 🔍 Check for CSV changes
+        id: check
+        run: |
+          if git diff --quiet portfolio_history.csv 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes (market closed or holiday)"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "CSV updated ✅"
+          fi
+
+      - name: 💾 Commit & push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add portfolio_history.csv
+          DATE=$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M IST')
+          git commit -m "⭐ Dhruv EOD update — $DATE"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📊 Print P&L summary
+        if: steps.check.outputs.changed == 'true'
+        run: python eod_tracker.py --report
