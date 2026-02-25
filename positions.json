@@ -1,0 +1,4 @@
+{
+  "_comment": "Initialise this file by running: python eod_tracker.py --init",
+  "_comment2": "Or use the Setup tab in the Streamlit dashboard (📈 Portfolio Tracker → ⚙️ Setup / Init)"
+}

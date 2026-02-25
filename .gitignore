@@ -1,0 +1,38 @@
+# ─────────────────────────────────────────────
+# Dhruv — .gitignore
+# ─────────────────────────────────────────────
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Data files — cache regenerates automatically
+# Keep positions.json and portfolio_history.csv IN the repo
+# so GitHub Actions can read/write them
+nifty500_cache.csv
+nifty500_yahoo_symbols.csv
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.iml

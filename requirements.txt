@@ -1,0 +1,10 @@
+# Dhruv — Nifty 500 Multibagger Research Suite
+# Pinned for Streamlit Cloud compatibility
+
+streamlit>=1.40.0
+yfinance>=0.2.36
+pandas>=2.0.0
+numpy>=1.26.0
+plotly>=5.20.0
+scipy>=1.11.0
+requests>=2.31.0
