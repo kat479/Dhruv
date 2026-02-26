@@ -150,8 +150,8 @@ with tab_pos:
         c1,c2,c3,c4 = st.columns(4)
         c1.metric("Total Invested",  f"₹{total_cost:,.0f}")
         c2.metric("Current Value",   f"₹{total_val:,.0f}")
-        c3.metric("Total P&L",       f"{sign}₹{abs(total_pnl):,.0f}",
-                  delta=f"{sign}{total_pct:.2f}%")
+        c3.metric("Total P&L",       f"{'+'if total_pnl>=0 else''}₹{total_pnl:,.0f}",
+                  delta=f"{total_pct:.2f}%")
         c4.metric("Positions",       len(positions))
         st.divider()
 
@@ -175,9 +175,9 @@ with tab_pos:
             col2.metric("Buy",      f"₹{r['buy_price']:,.2f}")
             col3.metric("Now",      f"₹{cp_:,.2f}" if cp_ else "N/A")
             col4.metric("Value",    f"₹{cv_:,.0f}" if cv_ else "N/A")
-            col5.metric("P&L ₹",   f"{sign}₹{abs(pa):,.0f}" if pa else "N/A")
-            col6.metric("P&L %",   f"{sign}{abs(pp):.2f}%" if pp else "N/A",
-                        delta=f"{sign}{abs(pp):.2f}%" if pp else None)
+            col5.metric("P&L ₹",   f"{'+' if pa>0 else ''}₹{pa:,.0f}" if pa else "N/A")
+            col6.metric("P&L %",   f"{'+' if pp>0 else ''}{pp:.2f}%" if pp else "N/A",
+                        delta=f"{pp:.2f}%" if pp else None)
             st.markdown('<hr style="border-color:#1e2d45;margin:4px 0">', unsafe_allow_html=True)
 
         # Waterfall chart
@@ -297,8 +297,8 @@ with tab_history:
         sign = "+" if total_pnl_day>=0 else ""
         c1.metric("Invested",      f"₹{total_inv_day:,.0f}")
         c2.metric("Value",         f"₹{total_val_day:,.0f}")
-        c3.metric("P&L",           f"{sign}₹{abs(total_pnl_day):,.0f}",
-                  delta=f"{sign}{abs(total_pnl_day/total_inv_day*100):.2f}%" if total_inv_day else None)
+        c3.metric("P&L",           f"{'+'if total_pnl_day>=0 else''}₹{total_pnl_day:,.0f}",
+                  delta=f"{(total_pnl_day/total_inv_day*100):.2f}%" if total_inv_day else None)
 
         def style_pnl(val):
             if pd.isna(val): return ""
