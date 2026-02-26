@@ -76,6 +76,19 @@ if "debt_equity" in df.columns: df = df[df["debt_equity"].isna() | (df["debt_equ
 if sel_ind:                     df = df[df["Industry"].isin(sel_ind)]
 df = df.sort_values("score", ascending=False).reset_index(drop=True)
 
+# ── Save filtered results to session_state for Optimizer ──
+st.session_state["screener_filtered_df"]     = df
+st.session_state["screener_filter_active"]   = (
+    min_score > 0 or max_pe < 200 or min_roe > 0 or max_de < 5.0 or bool(sel_ind)
+)
+st.session_state["screener_filter_summary"]  = (
+    f"Score ≥ {min_score}"
+    + (f" · PE ≤ {max_pe}" if max_pe < 200 else "")
+    + (f" · ROE ≥ {min_roe}%" if min_roe > 0 else "")
+    + (f" · D/E ≤ {max_de}" if max_de < 5.0 else "")
+    + (f" · Sectors: {', '.join(sel_ind)}" if sel_ind else "")
+)
+
 # ── Quick stats ──────────────────────────────
 c1,c2,c3,c4,c5 = st.columns(5)
 c1.metric("Universe",       len(df_cache))
@@ -103,6 +116,17 @@ for row_start in range(0, len(top_df), 5):
                 <div style="font-size:13px;color:#e2e8f0">{"₹{:,.0f}".format(price) if price and pd.notna(price) else "N/A"}</div>
                 <div style="font-size:11px;color:#4b5563">{"↓{:.1f}% from high".format(pfh) if pfh and pd.notna(pfh) else ""}</div>
             </div>""", unsafe_allow_html=True)
+# ── Send to Optimizer ───────────────────────
+col_send1, col_send2, col_send3 = st.columns([2, 2, 4])
+with col_send1:
+    if st.button("🎯 Send to Optimizer", type="primary", use_container_width=True):
+        st.switch_page("pages/2_optimizer.py")
+with col_send2:
+    st.caption(
+        f"**{len(df)} stocks** will flow into the Optimizer "
+        + (f"with active filters" if st.session_state.get('screener_filter_active') else "")
+    )
+
 st.divider()
 
 # ── Tabs ─────────────────────────────────────
@@ -220,7 +244,8 @@ with tab3:
                 if not h.empty:
                     norm = (h["Close"]/h["Close"].iloc[0])*100
                     fig.add_trace(go.Scatter(x=h.index, y=norm, name=nm, mode="lines", line={"width":2}))
-            except: pass
+            except Exception as e:
+                st.warning(f"Could not load chart for {nm}: {e}")
         fig.update_layout(title=f"Normalised Performance (Base=100) — {chart_period}",
                           paper_bgcolor="#080c14", plot_bgcolor="#080c14", font_color="white",
                           height=460, hovermode="x unified",
