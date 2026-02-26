@@ -31,7 +31,9 @@ with st.sidebar:
     st.divider()
     total_inv = st.number_input("Total Investment (₹)", min_value=100_000,
                                  max_value=100_000_000, value=1_000_000, step=100_000, format="%d")
-    top_n     = st.slider("Number of stocks", 5, 20, 10)
+    top_n     = st.slider("Max stocks to optimise", 5, 20, 10,
+                            help="Caps how many top-scored stocks to include. "
+                                 "Stocks come from the Screener filters you set.")
     st.divider()
     strategy = st.radio("Allocation strategy", [
         "🔀 Hybrid (KPI + Sharpe)",
@@ -49,21 +51,60 @@ with st.sidebar:
     if st.button("🔄 Reload"):
         st.cache_data.clear(); st.rerun()
 
-# ── Load & pick top N ────────────────────────
+# ── Load stocks — screener filters or full cache ─────────────────────────────
 if not cache_is_fresh():
     st.warning("⚠️ Cache is stale. Go to **📡 Screener** and refresh data first.")
     st.stop()
 
-df_all = load_cache()
-if df_all.empty:
-    st.error("No cache found. Run the Screener first to generate data.")
+screener_df      = st.session_state.get("screener_filtered_df", None)
+filter_active    = st.session_state.get("screener_filter_active", False)
+filter_summary   = st.session_state.get("screener_filter_summary", "")
+
+if screener_df is not None and not screener_df.empty and filter_active:
+    # Use screener-filtered stocks
+    source_df = screener_df.copy()
+    st.info(
+        f"🔗 **Using screener filters:** {filter_summary}  ·  "
+        f"**{len(source_df)} stocks** passed · picking top {top_n} by KPI score.  "
+        f"_Change filters on the 📡 Screener page to update this list._",
+        icon="📡"
+    )
+elif screener_df is not None and not screener_df.empty:
+    source_df = screener_df.copy()
+    st.info(
+        f"🔗 **Linked to Screener** — no active filters, using all "
+        f"{len(source_df)} scored stocks. Set filters on the 📡 Screener page to narrow down.",
+        icon="📡"
+    )
+else:
+    # Screener hasn't been visited yet — fallback to full cache
+    source_df = load_cache()
+    if source_df.empty:
+        st.error("No data found. Run the Screener first to generate data.")
+        st.stop()
+    if "score" not in source_df.columns:
+        source_df["score"] = source_df.apply(lambda r: multibagger_score(r.to_dict()), axis=1)
+    st.info(
+        "💡 Visit the **📡 Screener** page first to apply filters — "
+        "filtered stocks will automatically flow into this optimizer.",
+        icon="💡"
+    )
+
+source_df = source_df[source_df["current_price"].notna() & (source_df["current_price"] > 0)]
+
+if len(source_df) < top_n:
+    st.warning(
+        f"⚠️ Only **{len(source_df)} stocks** passed your screener filters "
+        f"(you requested {top_n}). Optimising with all {len(source_df)} available stocks. "
+        f"Try relaxing your filters on the Screener page."
+    )
+    top_n = len(source_df)
+
+if top_n < 3:
+    st.error("Need at least 3 stocks to optimise. Please relax your screener filters.")
     st.stop()
 
-if "score" not in df_all.columns:
-    df_all["score"] = df_all.apply(lambda r: multibagger_score(r.to_dict()), axis=1)
-
-df_all = df_all[df_all["current_price"].notna() & (df_all["current_price"] > 0)]
-df_top = df_all.sort_values("score", ascending=False).head(top_n).reset_index(drop=True)
+df_top = source_df.sort_values("score", ascending=False).head(top_n).reset_index(drop=True)
 
 tickers = tuple(df_top["Yahoo Symbol"].tolist())
 names   = df_top["Company Name"].tolist()
