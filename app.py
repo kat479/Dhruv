@@ -51,9 +51,10 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 pages = {"⭐ Dhruv": [
-    st.Page("pages/1_screener.py",  title="📡 Nifty 500 Screener", icon="📡"),
-    st.Page("pages/2_optimizer.py", title="🎯 Portfolio Optimizer", icon="🎯"),
-    st.Page("pages/3_tracker.py",   title="📈 Portfolio Tracker",   icon="📈"),
+    st.Page("pages/1_screener.py",       title="📡 Nifty 500 Screener", icon="📡"),
+    st.Page("pages/2_optimizer.py",      title="🎯 Portfolio Optimizer", icon="🎯"),
+    st.Page("pages/3_tracker.py",        title="📈 Portfolio Tracker",   icon="📈"),
+    st.Page("pages/4_market_monitor.py", title="🌐 Market Monitor",      icon="🌐"),
 ]}
 pg = st.navigation(pages)
 pg.run()
