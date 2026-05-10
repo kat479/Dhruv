@@ -160,8 +160,8 @@ with tab1:
         return "color:#4ade80" if v>0 else "color:#f87171"
 
     st.dataframe(
-        tbl.style.applymap(sc_style, subset=["Score"])
-                 .applymap(gr_style, subset=["Rev Gr%","EPS Gr%","↓ 52W High%"])
+        tbl.style.map(sc_style, subset=["Score"])
+                 .map(gr_style, subset=["Rev Gr%","EPS Gr%","↓ 52W High%"])
                  .format(na_rep="—"),
         height=520
     )
