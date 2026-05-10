@@ -211,7 +211,7 @@ with tab_heat:
                 clicked = st.button(
                     f"{sec['sector'][:28]}",
                     key=f"sec_{sec['sector']}",
-                    use_container_width=True,
+                    width='stretch',
                     help=f"Click to drill into {sec['sector']} stocks"
                 )
                 if clicked:
@@ -316,7 +316,7 @@ with tab_chart:
         showlegend=False,
         bargap=0.3,
     )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    st.plotly_chart(fig_bar, width='stretch')
 
     # Bubble chart: PE vs ROE sized by market cap
     st.markdown("#### PE vs ROE — Bubble = Market Cap")
@@ -366,7 +366,7 @@ with tab_chart:
                    title_font_color="#64748b"),
         margin=dict(t=20, b=20),
     )
-    st.plotly_chart(fig_bub, use_container_width=True)
+    st.plotly_chart(fig_bub, width='stretch')
 
     # Full sector summary table
     st.markdown("#### Full Sector Summary Table")
@@ -400,7 +400,7 @@ with tab_chart:
            .style.map(style_valuation, subset=["Valuation"])
                  .map(style_pe, subset=["Median PE"])
                  .format(na_rep="—"),
-        height=440, use_container_width=True
+        height=440, width='stretch'
     )
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -585,7 +585,7 @@ with tab_drill:
                .map(style_pe_cell, subset=["PE"])
                .map(style_pos,     subset=["Rev Gr %", "EPS Gr %"])
                .format(na_rep="—"),
-        height=420, use_container_width=True
+        height=420, width='stretch'
     )
 
     # ── PE distribution chart for sector ──────────────────────────────────────
@@ -612,7 +612,7 @@ with tab_drill:
             yaxis=dict(gridcolor="#1e2d45", title="# Stocks"),
             margin=dict(t=20, b=20), showlegend=False
         )
-        st.plotly_chart(fig_pe, use_container_width=True)
+        st.plotly_chart(fig_pe, width='stretch')
 
     # ── Radar comparison of top 5 in sector ───────────────────────────────────
     top5 = df_sector.head(5)
@@ -632,7 +632,7 @@ with tab_drill:
             c     = colors_r[i % len(colors_r)]
             fig_r = go.Figure(go.Scatterpolar(
                 r=norm_closed, theta=cats_closed, fill="toself",
-                fillcolor=f"{c}22", line_color=c, line_width=2,
+                fillcolor="rgba({},{},{},0.13)".format(int(c[1:3],16),int(c[3:5],16),int(c[5:7],16)), line_color=c, line_width=2,
             ))
             fig_r.update_layout(
                 polar=dict(
@@ -648,7 +648,7 @@ with tab_drill:
                            font=dict(size=9), x=0.5)
             )
             with radar_cols[i % min(5, len(top5))]:
-                st.plotly_chart(fig_r, use_container_width=True)
+                st.plotly_chart(fig_r, width='stretch')
 
 st.divider()
 st.caption("⚠️ For research purposes only. Not SEBI-registered investment advice. PE comparisons use trailing 12-month data.")
