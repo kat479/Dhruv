@@ -500,46 +500,44 @@ with tab_drill:
             elif pe_v > nifty_pe:                         pe_col = "#fb923c"
 
         with card_cols[ci % 4]:
+            # Pre-compute all dynamic values to avoid nested f-string quote conflicts
+            cname      = row['Company Name']
+            cname_trunc= cname[:22]
+            nse        = row.get('NSE Symbol', '')
+            price_str  = "₹{:,.0f}".format(price) if pd.notna(price) else "N/A"
+            pe_str     = "—" if pd.isna(pe_v)  else f"{pe_v:.1f}x"
+            roe_str    = "—" if pd.isna(roe_v) else f"{roe_v*100:.1f}%"
+            rg_str     = "—" if pd.isna(rg_v)  else f"{rg_v*100:.1f}%"
+            de_str     = "—" if pd.isna(de_v)  else f"{de_v/100:.2f}"
+            rg_col     = "#4ade80" if pd.notna(rg_v) and rg_v > 0.15 else "#e2e8f0"
+            de_col     = ("#4ade80" if pd.notna(de_v) and de_v < 50
+                          else "#f87171" if pd.notna(de_v) and de_v >= 50
+                          else "#e2e8f0")
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,#0d1424,#111827);
                         border:1px solid #1e2d45;border-top:3px solid {col};
                         border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-
                 <div style="font-size:13px;font-weight:700;color:#f1f5f9;
                             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                     title="{row['Company Name']}">
-                    {row['Company Name'][:22]}
+                     title="{cname}">
+                    {cname_trunc}
                 </div>
                 <div style="font-family:'DM Mono',monospace;font-size:9px;
                             color:#6b7280;margin-bottom:8px;">
-                    {row.get('NSE Symbol','')}&nbsp;·&nbsp;
-                    {"₹{:,.0f}".format(price) if pd.notna(price) else "N/A"}
+                    {nse}&nbsp;·&nbsp;{price_str}
                 </div>
-
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;
                             font-family:'DM Mono',monospace;font-size:9px;">
                     <div style="color:#64748b;">KPI Score</div>
                     <div style="color:{col};font-weight:700;text-align:right;">{sc}/100</div>
-
                     <div style="color:#64748b;">PE</div>
-                    <div style="color:{pe_col};text-align:right;">
-                        {"—" if pd.isna(pe_v) else f"{pe_v:.1f}x"}
-                    </div>
-
+                    <div style="color:{pe_col};text-align:right;">{pe_str}</div>
                     <div style="color:#64748b;">ROE</div>
-                    <div style="color:#e2e8f0;text-align:right;">
-                        {"—" if pd.isna(roe_v) else f"{roe_v*100:.1f}%"}
-                    </div>
-
+                    <div style="color:#e2e8f0;text-align:right;">{roe_str}</div>
                     <div style="color:#64748b;">Rev Gr</div>
-                    <div style="color:{"#4ade80" if pd.notna(rg_v) and rg_v>0.15 else "#e2e8f0"};text-align:right;">
-                        {"—" if pd.isna(rg_v) else f"{rg_v*100:.1f}%"}
-                    </div>
-
+                    <div style="color:{rg_col};text-align:right;">{rg_str}</div>
                     <div style="color:#64748b;">D/E</div>
-                    <div style="color:{"#4ade80" if pd.notna(de_v) and de_v<50 else "#f87171" if pd.notna(de_v) and de_v>=50 else "#e2e8f0"};text-align:right;">
-                        {"—" if pd.isna(de_v) else f"{de_v/100:.2f}"}
-                    </div>
+                    <div style="color:{de_col};text-align:right;">{de_str}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
